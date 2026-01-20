@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Ground
   - Enemy
+  - EnemyDeathListener
   layers:
   - Default
   - TransparentFX
@@ -16,7 +17,7 @@ TagManager:
   - player
   - UI3D
   - Weapon
-  - 
+  - Ignore
   - 
   - 
   - 

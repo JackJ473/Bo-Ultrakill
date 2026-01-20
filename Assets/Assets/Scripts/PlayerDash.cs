@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening.Core.Easing;
 using TMPro.EditorUtilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,6 +10,7 @@ public class PlayerDash : MonoBehaviour
     [SerializeField] private float _dashForce = 50f;
     [SerializeField] private float _airDashForce = 25f;
     [SerializeField] private float _slideForce = 25f;
+    [SerializeField] private float _slamForce = 25f;
     [SerializeField] private float _pushDash = 25f;
 
     [SerializeField] private float _InitialDashPush = 10f;
@@ -19,16 +21,23 @@ public class PlayerDash : MonoBehaviour
     private bool _isSliding = false;
 
     private Rigidbody _rb;
+    private CapsuleCollider _capsuleCollider;
     private Vector3 _forwardHold;
     private float _timer;
     void Start()
     {
         _rb = GetComponent<Rigidbody>();
+        _capsuleCollider = GetComponent<CapsuleCollider>();
     }
 
     private void Update()
     {
-       // Debug.Log(_playerMovement.allowMovement);
+        // Debug.Log(_playerMovement.allowMovement);
+
+        if (_isSliding == false && _capsuleCollider.height != 2) 
+        {
+            _capsuleCollider.height = 2f; 
+        }
 
         if (_isDashing) { Dash(); }
         if (_isSliding) { Slide(); }
@@ -75,7 +84,7 @@ public class PlayerDash : MonoBehaviour
         if (context.started && _playerMovement.collisions > 0 || context.performed && _playerMovement.collisions > 0)
         {
 
-            transform.localScale = new Vector3(transform.localScale.x, 0.5f, transform.localScale.z);
+            _capsuleCollider.height = 0.5f;
 
             Vector2 input = _playerMovement.inputDirection;
 
@@ -97,9 +106,17 @@ public class PlayerDash : MonoBehaviour
             _isSliding = true;
         }
 
+        else if (context.started && _playerMovement.collisions == 0 || context.performed && _playerMovement.collisions == 0) 
+        {
+            //Debug.Log("help");
+            _rb.linearVelocity = Vector3.zero;
+            _rb.AddForce(Vector3.down * _slamForce / 100, ForceMode.Impulse);
+            _rb.AddForce(Vector3.down * _slamForce * Time.deltaTime, ForceMode.VelocityChange);
+        }
+
         else if (context.canceled)
         {
-            transform.localScale = new Vector3(transform.localScale.x, 1f, transform.localScale.z);
+            
             _isSliding = false;
             _playerMovement.allowMovement = true;
         }
@@ -112,12 +129,16 @@ public class PlayerDash : MonoBehaviour
             _playerMovement.allowMovement = true;
             _isDashing = false;
         }
-        
+
         if (_isSliding)
         {
-            transform.localScale = new Vector3(transform.localScale.x, 1f, transform.localScale.z);
+            //transform.localScale = new Vector3(transform.localScale.x, 1f, transform.localScale.z);
             _isSliding = false;
             _playerMovement.allowMovement = true;
+        }
+        else
+        {
+            //transform.localScale = new Vector3(transform.localScale.x, 2f, transform.localScale.z);
         }
     }
 
@@ -148,9 +169,12 @@ public class PlayerDash : MonoBehaviour
 
     private void Slide()
     {
+
+
         if (_playerMovement.collisions > 0)
         {
             _rb.AddForce(_forwardHold * _slideForce * Time.deltaTime, ForceMode.VelocityChange);
         }
+       
     }
 }
